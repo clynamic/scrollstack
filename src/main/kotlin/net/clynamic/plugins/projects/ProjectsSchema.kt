@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import kotlinx.coroutines.Dispatchers
 import net.clynamic.plugins.Service
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -94,7 +95,7 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
     }
 
     object RemoteProjects : Table() {
-        val id = integer("id") references PartialProjects.id
+        val id = integer("id").references(PartialProjects.id, onDelete = ReferenceOption.CASCADE)
         val url = text("url")
 
         override val primaryKey = PrimaryKey(id)
