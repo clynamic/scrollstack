@@ -7,6 +7,7 @@ import net.clynamic.plugins.configureDatabases
 import net.clynamic.plugins.configureHttpDocs
 import net.clynamic.plugins.configureSerialization
 import net.clynamic.plugins.projects.configureProjectsRouting
+import net.clynamic.plugins.userprojects.configureUserProjectsRouting
 import net.clynamic.plugins.users.configureUsersRouting
 
 fun main() {
@@ -20,4 +21,5 @@ fun Application.module() {
     configureDatabases()
     configureUsersRouting()
     configureProjectsRouting()
+    configureUserProjectsRouting()
 }

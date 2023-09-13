@@ -15,7 +15,7 @@ import net.clynamic.plugins.getPageAndSize
 
 fun Application.configureUsersRouting() {
     val database = attributes[DATABASE_KEY]
-    val userService = UserService(database)
+    val service = UserService(database)
 
     routing {
         post("/users", {
@@ -28,13 +28,16 @@ fun Application.configureUsersRouting() {
             }
             response {
                 HttpStatusCode.Created to {
-                    body<Int> {}
+                    body<Int> {
+                        description = "The new user ID"
+                    }
                 }
             }
         }) {
             val user = call.receive<UserRequest>()
-            val id = userService.create(user)
+            val id = service.create(user)
             call.respond(HttpStatusCode.Created, id)
+            call.response.headers.append("Location", "/users/${id}")
         }
         get("/users/{id}", {
             tags = listOf("users")
@@ -52,7 +55,7 @@ fun Application.configureUsersRouting() {
             }
         }) {
             val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            val user = userService.read(id)
+            val user = service.read(id)
             if (user != null) {
                 call.respond(HttpStatusCode.OK, user)
             } else {
@@ -66,6 +69,9 @@ fun Application.configureUsersRouting() {
                 request {
                     queryParameter<Int?>("page") { description = "The page number" }
                     queryParameter<Int?>("size") { description = "The page size" }
+                    queryParameter<Int?>("project") {
+                        description = "Project ID to filter by association"
+                    }
                 }
                 response {
                     HttpStatusCode.OK to {
@@ -74,7 +80,8 @@ fun Application.configureUsersRouting() {
                 }
             }) {
             val (page, size) = call.getPageAndSize()
-            val users = userService.page(page, size)
+            val project = call.parameters["project"]?.toIntOrNull()
+            val users = service.page(page, size, project)
             call.respond(HttpStatusCode.OK, users)
         }
         put("/users/{id}", {
@@ -82,7 +89,7 @@ fun Application.configureUsersRouting() {
             description = "Update a user"
             request {
                 pathParameter<Int>("id") { description = "The user ID" }
-                body<UserRequest> {
+                body<UserUpdate> {
                     description = "Changed user properties"
                 }
             }
@@ -93,8 +100,8 @@ fun Application.configureUsersRouting() {
             }
         }) {
             val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            val request = call.receive<UserRequest>()
-            userService.update(id, request)
+            val request = call.receive<UserUpdate>()
+            service.update(id, request)
             call.respond(HttpStatusCode.OK)
         }
         delete("/users/{id}", {
@@ -110,7 +117,7 @@ fun Application.configureUsersRouting() {
             }
         }) {
             val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            userService.delete(id)
+            service.delete(id)
             call.respond(HttpStatusCode.OK)
         }
     }

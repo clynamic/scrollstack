@@ -14,11 +14,5 @@ fun Application.configureHttpDocs() {
             version = "1.0.0"
             description = "API for Scrollstack, the clynamic portfolio site."
         }
-        tag("users") {
-            description = "Query users"
-        }
-        tag("projects") {
-            description = "Query projects"
-        }
     }
 }

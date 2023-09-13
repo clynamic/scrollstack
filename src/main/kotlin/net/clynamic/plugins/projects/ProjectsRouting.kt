@@ -15,7 +15,7 @@ import net.clynamic.plugins.getPageAndSize
 
 fun Application.configureProjectsRouting() {
     val database = attributes[DATABASE_KEY]
-    val projectService = ProjectService(database)
+    val service = ProjectService(database)
 
     routing {
         post("/projects", {
@@ -28,13 +28,16 @@ fun Application.configureProjectsRouting() {
             }
             response {
                 HttpStatusCode.Created to {
-                    body<Int> {}
+                    body<Int> {
+                        description = "The new project ID"
+                    }
                 }
             }
         }) {
             val project = call.receive<ProjectRequest>()
-            val id = projectService.create(project)
+            val id = service.create(project)
             call.respond(HttpStatusCode.Created, id)
+            call.response.headers.append("Location", "/projects/${id}")
         }
         get("/projects/{id}", {
             tags = listOf("projects")
@@ -57,7 +60,7 @@ fun Application.configureProjectsRouting() {
                 return@get
             }
 
-            val project = projectService.read(id)
+            val project = service.read(id)
             if (project == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
@@ -71,6 +74,7 @@ fun Application.configureProjectsRouting() {
             request {
                 queryParameter<Int?>("page") { description = "The page number" }
                 queryParameter<Int?>("size") { description = "The page size" }
+                queryParameter<Int?>("user") { description = "User ID to filter by association" }
             }
             response {
                 HttpStatusCode.OK to {
@@ -79,7 +83,8 @@ fun Application.configureProjectsRouting() {
             }
         }) {
             val (page, size) = call.getPageAndSize()
-            val projects = projectService.page(page, size)
+            val user = call.parameters["user"]?.toIntOrNull()
+            val projects = service.page(page, size, user)
             call.respond(HttpStatusCode.OK, projects)
         }
         put("/projects/{id}", {
@@ -87,7 +92,7 @@ fun Application.configureProjectsRouting() {
             description = "Update a project by ID"
             request {
                 pathParameter<Int>("id") { description = "The project ID" }
-                body<ProjectRequest> {
+                body<ProjectUpdate> {
                     description = "New project properties"
                 }
             }
@@ -103,8 +108,8 @@ fun Application.configureProjectsRouting() {
                 return@put
             }
 
-            val project = call.receive<ProjectRequest>()
-            projectService.update(id, project)
+            val project = call.receive<ProjectUpdate>()
+            service.update(id, project)
             call.respond(HttpStatusCode.NoContent)
         }
         delete("/projects/{id}", {
@@ -125,7 +130,7 @@ fun Application.configureProjectsRouting() {
                 return@delete
             }
 
-            projectService.delete(id)
+            service.delete(id)
             call.respond(HttpStatusCode.NoContent)
         }
     }

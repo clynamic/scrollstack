@@ -18,10 +18,10 @@ fun Application.configureDatabases() {
     )
 }
 
-interface Service<R, T> {
+interface Service<R, T, U> {
     suspend fun create(request: R): Int
     suspend fun read(id: Int): T?
     suspend fun page(page: Int?, size: Int?): List<T>
-    suspend fun update(id: Int, request: R)
+    suspend fun update(id: Int, update: U)
     suspend fun delete(id: Int)
 }

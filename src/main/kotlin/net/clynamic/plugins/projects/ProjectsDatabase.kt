@@ -1,9 +1,8 @@
 package net.clynamic.plugins.projects
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 import kotlinx.coroutines.Dispatchers
 import net.clynamic.plugins.Service
+import net.clynamic.plugins.userprojects.UserProjectsService
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
@@ -11,6 +10,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
@@ -18,75 +18,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
-)
-@JsonSubTypes(
-    JsonSubTypes.Type(value = RemoteProject::class, name = "REMOTE"),
-    JsonSubTypes.Type(value = GithubProject::class, name = "GITHUB")
-)
-sealed class PartialProject {
-    abstract val id: Int
-    abstract val title: String
-    abstract val type: ProjectType
-}
-
-enum class ProjectType {
-    REMOTE,
-    GITHUB
-}
-
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
-)
-@JsonSubTypes(
-    JsonSubTypes.Type(value = RemoteProjectRequest::class, name = "REMOTE")
-)
-interface ProjectRequest {
-    val title: String
-}
-
-data class RemoteProject(
-    override val id: Int,
-    override val title: String,
-    val url: String
-) : PartialProject() {
-    override val type = ProjectType.REMOTE
-}
-
-data class RemoteProjectRequest(
-    override val title: String,
-    val url: String
-) : ProjectRequest
-
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
-)
-@JsonSubTypes(
-    JsonSubTypes.Type(value = GithubProject::class, name = "GITHUB")
-)
-sealed class FullProject : PartialProject()
-
-data class GithubProject(
-    override val id: Int,
-    override val title: String,
-    val description: String,
-    val stars: Int,
-    val lastCommit: String?,
-    val website: String?,
-    val language: String?,
-    val banner: String?
-) : FullProject() {
-    override val type = ProjectType.GITHUB
-}
-
-class ProjectService(database: Database) : Service<ProjectRequest, PartialProject> {
+class ProjectService(database: Database) : Service<ProjectRequest, PartialProject, ProjectUpdate> {
     object PartialProjects : Table() {
         val id = integer("id").autoIncrement()
         val title = text("title")
@@ -159,24 +91,39 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
     }
 
     override suspend fun page(page: Int?, size: Int?): List<PartialProject> {
+        return this.page(page, size)
+    }
+
+    suspend fun page(page: Int?, size: Int?, user: Int? = null): List<PartialProject> {
         val sized = (size ?: 20).coerceAtMost(40)
         val paged = (page ?: 1).coerceAtLeast(1)
 
         return dbQuery {
-            val partialProjects = PartialProjects.selectAll()
-                .limit(sized, ((paged - 1) * sized).toLong())
+            val query = if (user != null) {
+                PartialProjects
+                    .innerJoin(
+                        UserProjectsService.UserProjects,
+                        { id },
+                        { projectId })
+                    .select { UserProjectsService.UserProjects.userId eq user }
+            } else {
+                PartialProjects.selectAll()
+            }
+            query.limit(sized, ((paged - 1) * sized).toLong())
                 .toList()
 
+            val partialProjects = query.toList()
             lookupProjects(partialProjects)
         }
     }
 
-    override suspend fun update(id: Int, request: ProjectRequest) {
-        when (request) {
-            is RemoteProjectRequest -> {
+    override suspend fun update(id: Int, update: ProjectUpdate) {
+        when (update) {
+            is RemoteProjectUpdate -> {
                 dbQuery {
                     RemoteProjects.update({ RemoteProjects.id eq id }) {
-                        it[url] = request.url
+                        if (update.url != null)
+                            it[url] = update.url
                     }
                 }
             }
