@@ -16,6 +16,7 @@ import net.clynamic.plugins.getPageAndSize
 fun Application.configureProjectsRouting() {
     val database = attributes[DATABASE_KEY]
     val service = ProjectService(database)
+    val client = ProjectClient()
 
     routing {
         post("/projects", {
@@ -47,7 +48,7 @@ fun Application.configureProjectsRouting() {
             }
             response {
                 HttpStatusCode.OK to {
-                    body<PartialProject> {}
+                    body<Project> {}
                 }
                 HttpStatusCode.NotFound to {
                     description = "Project not found"
@@ -60,12 +61,13 @@ fun Application.configureProjectsRouting() {
                 return@get
             }
 
-            val project = service.read(id)
-            if (project == null) {
+            val partialProject = service.read(id)
+            if (partialProject == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
             }
 
+            val project = client.resolve(partialProject)
             call.respond(HttpStatusCode.OK, project)
         }
         get("/projects", {
@@ -78,13 +80,14 @@ fun Application.configureProjectsRouting() {
             }
             response {
                 HttpStatusCode.OK to {
-                    body<List<PartialProject>> {}
+                    body<List<Project>> {}
                 }
             }
         }) {
             val (page, size) = call.getPageAndSize()
             val user = call.parameters["user"]?.toIntOrNull()
-            val projects = service.page(page, size, user)
+            val partialProjects = service.page(page, size, user)
+            val projects = client.resolve(partialProjects)
             call.respond(HttpStatusCode.OK, projects)
         }
         put("/projects/{id}", {

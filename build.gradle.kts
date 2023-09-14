@@ -41,4 +41,6 @@ dependencies {
     implementation("io.github.smiley4:ktor-swagger-ui:2.4.0")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("org.jsoup:jsoup:1.14.3")
 }

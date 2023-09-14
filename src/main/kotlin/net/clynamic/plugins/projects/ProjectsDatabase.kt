@@ -21,20 +21,21 @@ import org.jetbrains.exposed.sql.update
 class ProjectService(database: Database) : Service<ProjectRequest, PartialProject, ProjectUpdate> {
     object PartialProjects : Table() {
         val id = integer("id").autoIncrement()
-        val title = text("title")
+        val name = text("name")
 
         override val primaryKey = PrimaryKey(id)
     }
 
-    object RemoteProjects : Table() {
+    object RemoteGithubProjects : Table() {
         val id = integer("id").references(PartialProjects.id, onDelete = ReferenceOption.CASCADE)
-        val url = text("url")
+        val owner = text("owner")
+        val repo = text("repo")
 
         override val primaryKey = PrimaryKey(id)
     }
 
     init {
-        transaction(database) { SchemaUtils.create(PartialProjects, RemoteProjects) }
+        transaction(database) { SchemaUtils.create(PartialProjects, RemoteGithubProjects) }
     }
 
     private suspend fun <T> dbQuery(block: suspend () -> T): T =
@@ -43,21 +44,23 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
     private suspend fun lookupProjects(rows: List<ResultRow>): List<PartialProject> {
         return dbQuery {
             val ids = rows.map { it[PartialProjects.id] }
-            val remoteProjectsMap = RemoteProjects.select { RemoteProjects.id inList ids }
-                .associateBy { it[RemoteProjects.id] }
+            val remoteGithubProjectsMap =
+                RemoteGithubProjects.select { RemoteGithubProjects.id inList ids }
+                    .associateBy { it[RemoteGithubProjects.id] }
 
             val finalProjects = mutableListOf<PartialProject>()
 
             for (row in rows) {
                 val id = row[PartialProjects.id]
-                val title = row[PartialProjects.title]
+                val title = row[PartialProjects.name]
 
-                remoteProjectsMap[id]?.let { remoteProjectRow ->
+                remoteGithubProjectsMap[id]?.let { remoteProjectRow ->
                     finalProjects.add(
-                        RemoteProject(
+                        RemoteGithubProject(
                             id = id,
-                            title = title,
-                            url = remoteProjectRow[RemoteProjects.url]
+                            name = title,
+                            owner = remoteProjectRow[RemoteGithubProjects.owner],
+                            repo = remoteProjectRow[RemoteGithubProjects.repo]
                         )
                     )
                 }
@@ -69,13 +72,14 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
 
     override suspend fun create(request: ProjectRequest): Int = dbQuery {
         val id = PartialProjects.insert {
-            it[title] = request.title
+            it[name] = request.name
         }[PartialProjects.id]
 
         when (request) {
-            is RemoteProjectRequest -> RemoteProjects.insert {
+            is RemoteGithubProjectRequest -> RemoteGithubProjects.insert {
                 it[this.id] = id
-                it[url] = request.url
+                it[owner] = request.owner
+                it[repo] = request.repo
             }
         }
 
@@ -119,11 +123,11 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
 
     override suspend fun update(id: Int, update: ProjectUpdate) {
         when (update) {
-            is RemoteProjectUpdate -> {
+            is RemoteGithubProjectUpdate -> {
                 dbQuery {
-                    RemoteProjects.update({ RemoteProjects.id eq id }) {
-                        if (update.url != null)
-                            it[url] = update.url
+                    RemoteGithubProjects.update({ RemoteGithubProjects.id eq id }) {
+                        update.owner?.let { owner -> it[RemoteGithubProjects.owner] = owner }
+                        update.repo?.let { repo -> it[RemoteGithubProjects.repo] = repo }
                     }
                 }
             }

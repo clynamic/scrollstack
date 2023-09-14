@@ -32,7 +32,7 @@ class CaseInsensitiveEnumSerializer : JsonSerializer<ProjectType>() {
 @JsonDeserialize(using = CaseInsensitiveEnumDeserializer::class)
 @JsonSerialize(using = CaseInsensitiveEnumSerializer::class)
 enum class ProjectType {
-    REMOTE,
+    REMOTE_GITHUB,
     GITHUB
 }
 
@@ -42,12 +42,12 @@ enum class ProjectType {
     property = "type",
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = RemoteProject::class, name = "remote"),
+    JsonSubTypes.Type(value = RemoteGithubProject::class, name = "remote_github"),
     JsonSubTypes.Type(value = GithubProject::class, name = "github")
 )
 sealed class PartialProject {
     abstract val id: Int
-    abstract val title: String
+    abstract val name: String
     abstract val type: ProjectType
 }
 
@@ -57,10 +57,10 @@ sealed class PartialProject {
     property = "type"
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = RemoteProjectRequest::class, name = "remote")
+    JsonSubTypes.Type(value = RemoteGithubProjectRequest::class, name = "remote_github")
 )
 sealed interface ProjectRequest {
-    val title: String
+    val name: String
     val type: ProjectType
 }
 
@@ -70,31 +70,34 @@ sealed interface ProjectRequest {
     property = "type"
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = RemoteProjectUpdate::class, name = "remote")
+    JsonSubTypes.Type(value = RemoteGithubProjectUpdate::class, name = "remote_github")
 )
 sealed interface ProjectUpdate {
     val type: ProjectType
 }
 
-data class RemoteProject(
+data class RemoteGithubProject(
     override val id: Int,
-    override val title: String,
-    val url: String
+    override val name: String,
+    val owner: String,
+    val repo: String,
 ) : PartialProject() {
-    override val type = ProjectType.REMOTE
+    override val type = ProjectType.REMOTE_GITHUB
 }
 
-data class RemoteProjectRequest(
-    override val title: String,
-    val url: String
+data class RemoteGithubProjectRequest(
+    override val name: String,
+    val owner: String,
+    val repo: String,
 ) : ProjectRequest {
-    override val type = ProjectType.REMOTE
+    override val type = ProjectType.REMOTE_GITHUB
 }
 
-data class RemoteProjectUpdate(
-    val url: String?
+data class RemoteGithubProjectUpdate(
+    val owner: String?,
+    val repo: String?,
 ) : ProjectUpdate {
-    override val type: ProjectType = ProjectType.REMOTE
+    override val type: ProjectType = ProjectType.REMOTE_GITHUB
 }
 
 @JsonTypeInfo(
@@ -109,11 +112,13 @@ sealed class Project : PartialProject()
 
 data class GithubProject(
     override val id: Int,
-    override val title: String,
-    val description: String,
+    override val name: String,
+    val owner: String,
+    val repo: String,
+    val description: String?,
     val stars: Int,
     val lastCommit: String?,
-    val website: String?,
+    val homepage: String?,
     val language: String?,
     val banner: String?
 ) : Project() {
