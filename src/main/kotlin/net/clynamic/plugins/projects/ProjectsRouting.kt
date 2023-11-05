@@ -37,8 +37,8 @@ fun Application.configureProjectsRouting() {
         }) {
             val project = call.receive<ProjectRequest>()
             val id = service.create(project)
-            call.respond(HttpStatusCode.Created, id)
             call.response.headers.append("Location", "/projects/${id}")
+            call.respond(HttpStatusCode.Created, id)
         }
         get("/projects/{id}", {
             tags = listOf("projects")

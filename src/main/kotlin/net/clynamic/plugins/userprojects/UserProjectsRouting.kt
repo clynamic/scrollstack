@@ -33,11 +33,11 @@ fun Application.configureUserProjectsRouting() {
             val relation = call.receive<UserProjectRelation>()
             val (userId, projectId) = relation
             service.associate(userId, projectId)
-            call.respond(HttpStatusCode.Created)
             call.response.headers.append(
                 "Location",
                 "/user-projects/${userId}/${projectId}"
             )
+            call.respond(HttpStatusCode.Created)
         }
         get("/user-projects/{userId}/{projectId}", {
             tags = listOf("user-projects")

@@ -36,8 +36,8 @@ fun Application.configureUsersRouting() {
         }) {
             val user = call.receive<UserRequest>()
             val id = service.create(user)
-            call.respond(HttpStatusCode.Created, id)
             call.response.headers.append("Location", "/users/${id}")
+            call.respond(HttpStatusCode.Created, id)
         }
         get("/users/{id}", {
             tags = listOf("users")
