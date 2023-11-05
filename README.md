@@ -39,6 +39,16 @@ To build the project, run:
 ./gradlew build
 ```
 
+## TODO
+
+- [ ] Add user profile pictures and banners
+- [ ] Add user accounts  
+      (Username, Email, Password, GitHub OAuth?)
+- [ ] Add permission system based on creator
+- [ ] Add raw projects 
+- [ ] Add blob storage (CDN)
+- [ ] Add more search query parameters
+
 ## Frontend
 
 For the frontend, see [Lorelense](https://github.com/clynamic/lorelense).
