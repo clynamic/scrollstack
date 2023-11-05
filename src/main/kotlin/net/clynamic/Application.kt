@@ -3,7 +3,9 @@ package net.clynamic
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import net.clynamic.plugins.configureAuth
 import net.clynamic.plugins.configureDatabases
+import net.clynamic.plugins.configureEnvironment
 import net.clynamic.plugins.configureHttpDocs
 import net.clynamic.plugins.configureSerialization
 import net.clynamic.plugins.projects.configureProjectsRouting
@@ -16,8 +18,10 @@ fun main() {
 }
 
 fun Application.module() {
+    configureEnvironment()
     configureSerialization()
     configureHttpDocs()
+    configureAuth()
     configureDatabases()
     configureUsersRouting()
     configureProjectsRouting()
