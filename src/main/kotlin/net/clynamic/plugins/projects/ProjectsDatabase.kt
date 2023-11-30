@@ -76,7 +76,7 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
         }[PartialProjects.id]
 
         when (request) {
-            is RemoteGithubProjectRequest -> RemoteGithubProjects.insert {
+            is GithubProjectRequest -> RemoteGithubProjects.insert {
                 it[this.id] = id
                 it[owner] = request.owner
                 it[repo] = request.repo
@@ -123,7 +123,7 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
 
     override suspend fun update(id: Int, update: ProjectUpdate) {
         when (update) {
-            is RemoteGithubProjectUpdate -> {
+            is GithubProjectUpdate -> {
                 dbQuery {
                     RemoteGithubProjects.update({ RemoteGithubProjects.id eq id }) {
                         update.owner?.let { owner -> it[RemoteGithubProjects.owner] = owner }

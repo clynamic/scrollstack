@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import java.time.Instant
 import java.util.Locale
 
 class CaseInsensitiveEnumDeserializer : JsonDeserializer<ProjectType>() {
@@ -32,7 +33,6 @@ class CaseInsensitiveEnumSerializer : JsonSerializer<ProjectType>() {
 @JsonDeserialize(using = CaseInsensitiveEnumDeserializer::class)
 @JsonSerialize(using = CaseInsensitiveEnumSerializer::class)
 enum class ProjectType {
-    REMOTE_GITHUB,
     GITHUB
 }
 
@@ -43,7 +43,6 @@ enum class ProjectType {
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = RemoteGithubProject::class, name = "remote_github"),
-    JsonSubTypes.Type(value = GithubProject::class, name = "github")
 )
 sealed class PartialProject {
     abstract val id: Int
@@ -57,7 +56,7 @@ sealed class PartialProject {
     property = "type"
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = RemoteGithubProjectRequest::class, name = "remote_github")
+    JsonSubTypes.Type(value = GithubProjectRequest::class, name = "github")
 )
 sealed interface ProjectRequest {
     val name: String
@@ -70,7 +69,7 @@ sealed interface ProjectRequest {
     property = "type"
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = RemoteGithubProjectUpdate::class, name = "remote_github")
+    JsonSubTypes.Type(value = GithubProjectUpdate::class, name = "github")
 )
 sealed interface ProjectUpdate {
     val type: ProjectType
@@ -82,22 +81,22 @@ data class RemoteGithubProject(
     val owner: String,
     val repo: String,
 ) : PartialProject() {
-    override val type = ProjectType.REMOTE_GITHUB
+    override val type = ProjectType.GITHUB
 }
 
-data class RemoteGithubProjectRequest(
+data class GithubProjectRequest(
     override val name: String,
     val owner: String,
     val repo: String,
 ) : ProjectRequest {
-    override val type = ProjectType.REMOTE_GITHUB
+    override val type = ProjectType.GITHUB
 }
 
-data class RemoteGithubProjectUpdate(
+data class GithubProjectUpdate(
     val owner: String?,
     val repo: String?,
 ) : ProjectUpdate {
-    override val type: ProjectType = ProjectType.REMOTE_GITHUB
+    override val type: ProjectType = ProjectType.GITHUB
 }
 
 @JsonTypeInfo(
@@ -117,7 +116,7 @@ data class GithubProject(
     val repo: String,
     val description: String?,
     val stars: Int,
-    val lastCommit: String?,
+    val lastCommit: Instant?,
     val homepage: String?,
     val language: String?,
     val banner: String?

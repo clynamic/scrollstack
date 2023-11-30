@@ -1,5 +1,7 @@
 package net.clynamic.plugins.projects
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers
@@ -10,6 +12,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okio.IOException
 import org.jsoup.Jsoup
+import java.time.Instant
 
 class ProjectClient {
     private val client = OkHttpClient.Builder()
@@ -17,7 +20,9 @@ class ProjectClient {
         // TODO: make this info clynamic ;)
         .addInterceptor(UserAgentInterceptor("scrollstack/1.0.0 (clynamic)"))
         .build()
-    private val mapper = jacksonObjectMapper()
+    private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule()).disable(
+        SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
+    )
 
     class HttpErrorInterceptor : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
@@ -75,7 +80,7 @@ class ProjectClient {
                     description = map["description"] as? String?,
                     stars = map["stargazers_count"] as? Int ?: 0,
                     language = map["language"] as? String?,
-                    lastCommit = map["pushed_at"] as String,
+                    lastCommit = map["pushed_at"]?.let { Instant.parse(it as String) },
                     homepage = map["homepage"] as? String?,
                     banner = banner,
                 )
