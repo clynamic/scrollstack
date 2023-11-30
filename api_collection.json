@@ -1,0 +1,292 @@
+[
+  {
+    "v": 1,
+    "name": "scrollstack",
+    "folders": [
+      {
+        "v": 1,
+        "name": "users",
+        "folders": [],
+        "requests": [
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/users",
+            "name": "create",
+            "params": [],
+            "headers": [],
+            "method": "POST",
+            "auth": {
+              "authType": "bearer",
+              "authActive": true,
+              "token": "<<admin_token>>"
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": "application/json",
+              "body": "{\n  \"name\": \"test_user\",\n  \"email\": \"test_user@clynamic.net\",\n  \"pronouns\": \"they/them\",\n  \"bio\": \"This is a test user. They test things!\",\n  \"discord\": \"test_user_1\",\n  \"github\": \"the_test_user\"\n}"
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/users/1",
+            "name": "get",
+            "params": [],
+            "headers": [],
+            "method": "GET",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": null
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/users",
+            "name": "page",
+            "params": [],
+            "headers": [],
+            "method": "GET",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": null
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/users/1",
+            "name": "update",
+            "params": [],
+            "headers": [],
+            "method": "PUT",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": "application/json",
+              "body": "{\n  \"bio\": \"This is a test user. This is a modified bio!\"\n}"
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/users/1",
+            "name": "delete",
+            "params": [],
+            "headers": [],
+            "method": "DELETE",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": ""
+            }
+          }
+        ]
+      },
+      {
+        "v": 1,
+        "name": "projects",
+        "folders": [],
+        "requests": [
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/projects",
+            "name": "create",
+            "params": [],
+            "headers": [],
+            "method": "POST",
+            "auth": {
+              "authType": "bearer",
+              "authActive": true,
+              "token": "<<admin_token>>"
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": "application/json",
+              "body": "{\n  \"name\": \"Test project!\",\n  \"owner\": \"clynamic\",\n  \"repo\": \"scrollstack\",\n  \"type\": \"github\"\n}"
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/projects/1",
+            "name": "get",
+            "params": [],
+            "headers": [],
+            "method": "GET",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": null
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/projects",
+            "name": "page",
+            "params": [],
+            "headers": [],
+            "method": "GET",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": null
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/projects",
+            "name": "page by user",
+            "params": [
+              {
+                "key": "user",
+                "value": "1",
+                "active": true
+              }
+            ],
+            "headers": [],
+            "method": "GET",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": null
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/projects/1",
+            "name": "update",
+            "params": [],
+            "headers": [],
+            "method": "PUT",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": "application/json",
+              "body": "{\n  \"name\": \"Updated test project!\",\n  \"type\": \"remote_github\"\n}"
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/projects/1",
+            "name": "delete",
+            "params": [],
+            "headers": [],
+            "method": "DELETE",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": ""
+            }
+          }
+        ]
+      },
+      {
+        "v": 1,
+        "name": "user projects",
+        "folders": [],
+        "requests": [
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/user-projects",
+            "name": "associate",
+            "params": [],
+            "headers": [],
+            "method": "POST",
+            "auth": {
+              "authType": "bearer",
+              "authActive": true,
+              "token": "<<admin_token>>"
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": "application/json",
+              "body": "{\n  \"userId\": 1,\n  \"projectId\": 1\n}"
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/user-projects/1/1",
+            "name": "check",
+            "params": [],
+            "headers": [],
+            "method": "GET",
+            "auth": {
+              "authType": "none",
+              "authActive": true
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": "{\n  \"userId\": 1,\n  \"projectId\": 1\n}"
+            }
+          },
+          {
+            "v": "1",
+            "endpoint": "<<baseUrl>>/user-projects/1/1",
+            "name": "dissociate",
+            "params": [],
+            "headers": [],
+            "method": "DELETE",
+            "auth": {
+              "authType": "bearer",
+              "authActive": true,
+              "token": "<<admin_token>>"
+            },
+            "preRequestScript": "",
+            "testScript": "",
+            "body": {
+              "contentType": null,
+              "body": "{\n  \"userId\": 1,\n  \"projectId\": 1\n}"
+            }
+          }
+        ]
+      }
+    ],
+    "requests": []
+  }
+]
