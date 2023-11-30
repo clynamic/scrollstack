@@ -25,9 +25,7 @@ Scrollstack serves a full swagger documentation at `/swagger-ui`.
 
 You may also test the API via [Hoppscotch](https://hoppscotch.io/) and the following spec file:
 
-```sh
-# TODO: Export and add spec file
-```
+[api_collection.json](./api_collection.json)
 
 ## Build
 
@@ -43,9 +41,9 @@ To build the project, run:
 
 - [ ] Add user profile pictures and banners
 - [ ] Add user accounts  
-      (Username, Email, Password, GitHub OAuth?)
+  (Username, Email, Password, GitHub OAuth?)
 - [ ] Add permission system based on creator
-- [ ] Add raw projects 
+- [ ] Add raw projects
 - [ ] Add blob storage (CDN)
 - [ ] Add more search query parameters
 
