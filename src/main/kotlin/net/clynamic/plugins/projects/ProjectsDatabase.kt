@@ -26,7 +26,7 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
         override val primaryKey = PrimaryKey(id)
     }
 
-    object RemoteGithubProjects : Table() {
+    object GithubProjects : Table() {
         val id = integer("id").references(PartialProjects.id, onDelete = ReferenceOption.CASCADE)
         val owner = text("owner")
         val repo = text("repo")
@@ -35,7 +35,7 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
     }
 
     init {
-        transaction(database) { SchemaUtils.create(PartialProjects, RemoteGithubProjects) }
+        transaction(database) { SchemaUtils.create(PartialProjects, GithubProjects) }
     }
 
     private suspend fun <T> dbQuery(block: suspend () -> T): T =
@@ -45,8 +45,8 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
         return dbQuery {
             val ids = rows.map { it[PartialProjects.id] }
             val remoteGithubProjectsMap =
-                RemoteGithubProjects.select { RemoteGithubProjects.id inList ids }
-                    .associateBy { it[RemoteGithubProjects.id] }
+                GithubProjects.select { GithubProjects.id inList ids }
+                    .associateBy { it[GithubProjects.id] }
 
             val finalProjects = mutableListOf<PartialProject>()
 
@@ -59,8 +59,8 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
                         RemoteGithubProject(
                             id = id,
                             name = title,
-                            owner = remoteProjectRow[RemoteGithubProjects.owner],
-                            repo = remoteProjectRow[RemoteGithubProjects.repo]
+                            owner = remoteProjectRow[GithubProjects.owner],
+                            repo = remoteProjectRow[GithubProjects.repo]
                         )
                     )
                 }
@@ -76,7 +76,7 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
         }[PartialProjects.id]
 
         when (request) {
-            is GithubProjectRequest -> RemoteGithubProjects.insert {
+            is GithubProjectRequest -> GithubProjects.insert {
                 it[this.id] = id
                 it[owner] = request.owner
                 it[repo] = request.repo
@@ -125,9 +125,9 @@ class ProjectService(database: Database) : Service<ProjectRequest, PartialProjec
         when (update) {
             is GithubProjectUpdate -> {
                 dbQuery {
-                    RemoteGithubProjects.update({ RemoteGithubProjects.id eq id }) {
-                        update.owner?.let { owner -> it[RemoteGithubProjects.owner] = owner }
-                        update.repo?.let { repo -> it[RemoteGithubProjects.repo] = repo }
+                    GithubProjects.update({ GithubProjects.id eq id }) {
+                        update.owner?.let { owner -> it[GithubProjects.owner] = owner }
+                        update.repo?.let { repo -> it[GithubProjects.repo] = repo }
                     }
                 }
             }

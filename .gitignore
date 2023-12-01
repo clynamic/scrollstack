@@ -37,3 +37,6 @@ out/
 
 ### Environment ###
 .env
+
+### Data ###
+*.db

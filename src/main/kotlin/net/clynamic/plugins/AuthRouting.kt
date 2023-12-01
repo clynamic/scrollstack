@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 fun Application.configureAuth() {
     val logger = LoggerFactory.getLogger("AuthRouting")
 
-    val adminToken = attributes[ENVIRONMENT_KEY].get("ADMIN_TOKEN")
+    val adminToken = attributes[ENVIRONMENT_KEY].get("ADMIN_TOKEN", null)
     if (adminToken == null) {
         // If no admin token is set, allow all requests
         logger.warn("No admin token set, allowing all requests")
