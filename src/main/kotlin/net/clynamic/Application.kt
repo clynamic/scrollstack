@@ -8,12 +8,14 @@ import net.clynamic.plugins.configureDatabases
 import net.clynamic.plugins.configureEnvironment
 import net.clynamic.plugins.configureHttpDocs
 import net.clynamic.plugins.configureSerialization
+import net.clynamic.plugins.dotenv
 import net.clynamic.plugins.projects.configureProjectsRouting
 import net.clynamic.plugins.userprojects.configureUserProjectsRouting
 import net.clynamic.plugins.users.configureUsersRouting
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+    val port = dotenv["PORT"]?.toInt() ?: 8080
+    embeddedServer(Netty, port = port, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 

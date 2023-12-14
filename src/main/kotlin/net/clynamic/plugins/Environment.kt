@@ -10,6 +10,14 @@ import java.io.File
 val ENVIRONMENT_KEY = AttributeKey<Dotenv>("environment")
 
 fun Application.configureEnvironment() {
+    attributes.put(ENVIRONMENT_KEY, dotenv)
+}
+
+val dotenv: Dotenv by lazy {
+    loadEnvironment()
+}
+
+private fun loadEnvironment(): Dotenv {
     val logger = LoggerFactory.getLogger("Environment")
 
     val envFile = File(".env")
@@ -36,5 +44,5 @@ fun Application.configureEnvironment() {
         logger.warn("No environment variables found")
     }
 
-    attributes.put(ENVIRONMENT_KEY, dotenv)
+    return dotenv
 }
