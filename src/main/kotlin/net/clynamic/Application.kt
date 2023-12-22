@@ -4,6 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import net.clynamic.plugins.configureAuth
+import net.clynamic.plugins.configureCors
 import net.clynamic.plugins.configureDatabases
 import net.clynamic.plugins.configureEnvironment
 import net.clynamic.plugins.configureHttpDocs
@@ -24,6 +25,7 @@ fun Application.module() {
     configureSerialization()
     configureHttpDocs()
     configureAuth()
+    configureCors()
     configureDatabases()
     configureUsersRouting()
     configureProjectsRouting()
