@@ -7,6 +7,7 @@ import io.github.smiley4.ktorswaggerui.dsl.put
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
@@ -19,27 +20,6 @@ fun Application.configureProjectsRouting() {
     val client = ProjectClient()
 
     routing {
-        post("/projects", {
-            tags = listOf("projects")
-            description = "Create a project"
-            request {
-                body<ProjectRequest> {
-                    description = "New project properties"
-                }
-            }
-            response {
-                HttpStatusCode.Created to {
-                    body<Int> {
-                        description = "The new project ID"
-                    }
-                }
-            }
-        }) {
-            val project = call.receive<ProjectRequest>()
-            val id = service.create(project)
-            call.response.headers.append("Location", "/projects/${id}")
-            call.respond(HttpStatusCode.Created, id)
-        }
         get("/projects/{id}", {
             tags = listOf("projects")
             description = "Get a project by ID"
@@ -90,51 +70,77 @@ fun Application.configureProjectsRouting() {
             val projects = client.resolve(projectSources)
             call.respond(HttpStatusCode.OK, projects)
         }
-        put("/projects/{id}", {
-            tags = listOf("projects")
-            description = "Update a project by ID"
-            request {
-                pathParameter<Int>("id") { description = "The project ID" }
-                body<ProjectUpdate> {
-                    description = "New project properties"
+        authenticate {
+            post("/projects", {
+                tags = listOf("projects")
+                description = "Create a project"
+                securitySchemeName = "bearer"
+                request {
+                    body<ProjectRequest> {
+                        description = "New project properties"
+                    }
                 }
-            }
-            response {
-                HttpStatusCode.NoContent to {
-                    description = "Project updated"
+                response {
+                    HttpStatusCode.Created to {
+                        body<Int> {
+                            description = "The new project ID"
+                        }
+                    }
                 }
+            }) {
+                val project = call.receive<ProjectRequest>()
+                val id = service.create(project)
+                call.response.headers.append("Location", "/projects/${id}")
+                call.respond(HttpStatusCode.Created, id)
             }
-        }) {
-            val id = call.parameters["id"]?.toIntOrNull()
-            if (id == null) {
-                call.respond(HttpStatusCode.BadRequest)
-                return@put
-            }
+            put("/projects/{id}", {
+                tags = listOf("projects")
+                description = "Update a project by ID"
+                securitySchemeName = "bearer"
+                request {
+                    pathParameter<Int>("id") { description = "The project ID" }
+                    body<ProjectUpdate> {
+                        description = "New project properties"
+                    }
+                }
+                response {
+                    HttpStatusCode.NoContent to {
+                        description = "Project updated"
+                    }
+                }
+            }) {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@put
+                }
 
-            val project = call.receive<ProjectUpdate>()
-            service.update(id, project)
-            call.respond(HttpStatusCode.NoContent)
-        }
-        delete("/projects/{id}", {
-            tags = listOf("projects")
-            description = "Delete a project by ID"
-            request {
-                pathParameter<Int>("id") { description = "The project ID" }
+                val project = call.receive<ProjectUpdate>()
+                service.update(id, project)
+                call.respond(HttpStatusCode.NoContent)
             }
-            response {
-                HttpStatusCode.NoContent to {
-                    description = "Project deleted"
+            delete("/projects/{id}", {
+                tags = listOf("projects")
+                description = "Delete a project by ID"
+                securitySchemeName = "bearer"
+                request {
+                    pathParameter<Int>("id") { description = "The project ID" }
                 }
-            }
-        }) {
-            val id = call.parameters["id"]?.toIntOrNull()
-            if (id == null) {
-                call.respond(HttpStatusCode.BadRequest)
-                return@delete
-            }
+                response {
+                    HttpStatusCode.NoContent to {
+                        description = "Project deleted"
+                    }
+                }
+            }) {
+                val id = call.parameters["id"]?.toIntOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@delete
+                }
 
-            service.delete(id)
-            call.respond(HttpStatusCode.NoContent)
+                service.delete(id)
+                call.respond(HttpStatusCode.NoContent)
+            }
         }
     }
 }

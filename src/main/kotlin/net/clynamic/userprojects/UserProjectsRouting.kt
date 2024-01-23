@@ -6,6 +6,7 @@ import io.github.smiley4.ktorswaggerui.dsl.post
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
@@ -16,29 +17,6 @@ fun Application.configureUserProjectsRouting() {
     val service = UserProjectsService(database)
 
     routing {
-        post("/user-projects", {
-            tags = listOf("user-projects")
-            description = "Associate a user with a project"
-            request {
-                body<UserProjectRelation> {
-                    description = "User and project IDs"
-                }
-            }
-            response {
-                HttpStatusCode.Created to {
-                    description = "User and project associated"
-                }
-            }
-        }) {
-            val relation = call.receive<UserProjectRelation>()
-            val (userId, projectId) = relation
-            service.associate(userId, projectId)
-            call.response.headers.append(
-                "Location",
-                "/user-projects/${userId}/${projectId}"
-            )
-            call.respond(HttpStatusCode.Created)
-        }
         get("/user-projects/{userId}/{projectId}", {
             tags = listOf("user-projects")
             description = "Check if a user is associated with a project"
@@ -69,24 +47,51 @@ fun Application.configureUserProjectsRouting() {
                 call.respond(HttpStatusCode.NotFound)
             }
         }
-        delete("/user-projects/{userId}/{projectId}", {
-            tags = listOf("user-projects")
-            description = "Dissociate a user from a project"
-            response {
-                HttpStatusCode.NoContent to {
-                    description = "User and project dissociated"
+        authenticate {
+            post("/user-projects", {
+                tags = listOf("user-projects")
+                description = "Associate a user with a project"
+                securitySchemeName = "bearer"
+                request {
+                    body<UserProjectRelation> {
+                        description = "User and project IDs"
+                    }
                 }
+                response {
+                    HttpStatusCode.Created to {
+                        description = "User and project associated"
+                    }
+                }
+            }) {
+                val relation = call.receive<UserProjectRelation>()
+                val (userId, projectId) = relation
+                service.associate(userId, projectId)
+                call.response.headers.append(
+                    "Location",
+                    "/user-projects/${userId}/${projectId}"
+                )
+                call.respond(HttpStatusCode.Created)
             }
-        }) {
-            val userId = call.parameters["userId"]?.toIntOrNull()
-            val projectId = call.parameters["projectId"]?.toIntOrNull()
-            if (userId == null || projectId == null) {
-                call.respond(HttpStatusCode.BadRequest)
-                return@delete
-            }
+            delete("/user-projects/{userId}/{projectId}", {
+                tags = listOf("user-projects")
+                description = "Dissociate a user from a project"
+                securitySchemeName = "bearer"
+                response {
+                    HttpStatusCode.NoContent to {
+                        description = "User and project dissociated"
+                    }
+                }
+            }) {
+                val userId = call.parameters["userId"]?.toIntOrNull()
+                val projectId = call.parameters["projectId"]?.toIntOrNull()
+                if (userId == null || projectId == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@delete
+                }
 
-            service.dissociate(userId, projectId)
-            call.respond(HttpStatusCode.NoContent)
+                service.dissociate(userId, projectId)
+                call.respond(HttpStatusCode.NoContent)
+            }
         }
     }
 }

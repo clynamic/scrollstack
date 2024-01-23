@@ -7,6 +7,7 @@ import io.github.smiley4.ktorswaggerui.dsl.put
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
@@ -18,27 +19,6 @@ fun Application.configureUsersRouting() {
     val service = UserService(database)
 
     routing {
-        post("/users", {
-            tags = listOf("users")
-            description = "Create a user"
-            request {
-                body<UserRequest> {
-                    description = "New user properties"
-                }
-            }
-            response {
-                HttpStatusCode.Created to {
-                    body<Int> {
-                        description = "The new user ID"
-                    }
-                }
-            }
-        }) {
-            val user = call.receive<UserRequest>()
-            val id = service.create(user)
-            call.response.headers.append("Location", "/users/${id}")
-            call.respond(HttpStatusCode.Created, id)
-        }
         get("/users/{id}", {
             tags = listOf("users")
             description = "Get a user by ID"
@@ -84,41 +64,69 @@ fun Application.configureUsersRouting() {
             val users = service.page(page, size, project)
             call.respond(HttpStatusCode.OK, users)
         }
-        put("/users/{id}", {
-            tags = listOf("users")
-            description = "Update a user"
-            request {
-                pathParameter<Int>("id") { description = "The user ID" }
-                body<UserUpdate> {
-                    description = "Changed user properties"
+        authenticate {
+            post("/users", {
+                tags = listOf("users")
+                description = "Create a user"
+                securitySchemeName = "bearer"
+                request {
+                    body<UserRequest> {
+                        description = "New user properties"
+                    }
                 }
-            }
-            response {
-                HttpStatusCode.OK to {
-                    description = "User updated"
+                response {
+                    HttpStatusCode.Created to {
+                        body<Int> {
+                            description = "The new user ID"
+                        }
+                    }
                 }
+            }) {
+                val user = call.receive<UserRequest>()
+                val id = service.create(user)
+                call.response.headers.append("Location", "/users/${id}")
+                call.respond(HttpStatusCode.Created, id)
             }
-        }) {
-            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            val request = call.receive<UserUpdate>()
-            service.update(id, request)
-            call.respond(HttpStatusCode.OK)
-        }
-        delete("/users/{id}", {
-            tags = listOf("users")
-            description = "Delete a user"
-            request {
-                pathParameter<Int>("id") { description = "The user ID" }
-            }
-            response {
-                HttpStatusCode.OK to {
-                    description = "User deleted"
+            put("/users/{id}", {
+                tags = listOf("users")
+                description = "Update a user"
+                securitySchemeName = "bearer"
+                request {
+                    pathParameter<Int>("id") { description = "The user ID" }
+                    body<UserUpdate> {
+                        description = "Changed user properties"
+                    }
                 }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "User updated"
+                    }
+                }
+            }) {
+                val id =
+                    call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
+                val request = call.receive<UserUpdate>()
+                service.update(id, request)
+                call.respond(HttpStatusCode.OK)
             }
-        }) {
-            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            service.delete(id)
-            call.respond(HttpStatusCode.OK)
+            delete("/users/{id}", {
+                tags = listOf("users")
+                description = "Delete a user"
+                securitySchemeName = "bearer"
+                request {
+                    pathParameter<Int>("id") { description = "The user ID" }
+                }
+                response {
+                    HttpStatusCode.OK to {
+                        description = "User deleted"
+                    }
+                }
+            }) {
+                val id =
+                    call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
+                service.delete(id)
+                call.respond(HttpStatusCode.OK)
+            }
         }
     }
 }
