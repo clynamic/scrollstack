@@ -1,4 +1,4 @@
-package net.clynamic.plugins
+package net.clynamic.common
 
 import io.github.smiley4.ktorswaggerui.SwaggerUI
 import io.ktor.server.application.Application

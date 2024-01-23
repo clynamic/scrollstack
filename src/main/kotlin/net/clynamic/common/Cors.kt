@@ -1,4 +1,4 @@
-package net.clynamic.plugins
+package net.clynamic.common
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.install

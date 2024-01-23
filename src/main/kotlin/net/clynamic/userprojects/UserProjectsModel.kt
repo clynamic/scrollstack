@@ -1,4 +1,4 @@
-package net.clynamic.plugins.userprojects
+package net.clynamic.userprojects
 
 data class UserProjectRelation(
     val userId: Int,

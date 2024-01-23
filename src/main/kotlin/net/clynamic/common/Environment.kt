@@ -1,4 +1,4 @@
-package net.clynamic.plugins
+package net.clynamic.common
 
 import io.github.cdimascio.dotenv.Dotenv
 import io.github.cdimascio.dotenv.dotenv

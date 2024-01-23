@@ -1,4 +1,4 @@
-package net.clynamic.plugins
+package net.clynamic.common
 
 import com.fasterxml.jackson.core.util.DefaultIndenter
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter

@@ -1,4 +1,4 @@
-package net.clynamic.plugins.projects
+package net.clynamic.projects
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule

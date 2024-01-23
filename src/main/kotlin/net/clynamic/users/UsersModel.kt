@@ -1,4 +1,4 @@
-package net.clynamic.plugins.users
+package net.clynamic.users
 
 data class UserRequest(
     val name: String,

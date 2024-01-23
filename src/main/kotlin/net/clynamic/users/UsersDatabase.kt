@@ -1,8 +1,8 @@
-package net.clynamic.plugins.users
+package net.clynamic.users
 
 import kotlinx.coroutines.Dispatchers
-import net.clynamic.plugins.Service
-import net.clynamic.plugins.userprojects.UserProjectsService
+import net.clynamic.common.Service
+import net.clynamic.userprojects.UserProjectsService
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq

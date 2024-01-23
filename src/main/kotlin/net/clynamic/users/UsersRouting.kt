@@ -1,4 +1,4 @@
-package net.clynamic.plugins.users
+package net.clynamic.users
 
 import io.github.smiley4.ktorswaggerui.dsl.delete
 import io.github.smiley4.ktorswaggerui.dsl.get
@@ -10,8 +10,8 @@ import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
-import net.clynamic.plugins.DATABASE_KEY
-import net.clynamic.plugins.getPageAndSize
+import net.clynamic.common.DATABASE_KEY
+import net.clynamic.common.getPageAndSize
 
 fun Application.configureUsersRouting() {
     val database = attributes[DATABASE_KEY]
