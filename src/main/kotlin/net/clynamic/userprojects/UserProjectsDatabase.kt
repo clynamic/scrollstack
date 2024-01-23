@@ -22,7 +22,7 @@ class UserProjectsService(database: Database) {
             integer("userId").references(UserService.Users.id, onDelete = ReferenceOption.CASCADE)
         val projectId =
             integer("projectId").references(
-                ProjectService.PartialProjects.id,
+                ProjectService.ProjectSources.id,
                 onDelete = ReferenceOption.CASCADE
             )
 

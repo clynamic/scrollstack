@@ -1,125 +1,82 @@
 package net.clynamic.projects
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.JsonSerializer
-import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import net.clynamic.common.CaseInsensitiveEnumDeserializer
+import net.clynamic.common.CaseInsensitiveEnumSerializer
 import java.time.Instant
-import java.util.Locale
 
-class CaseInsensitiveEnumDeserializer : JsonDeserializer<ProjectType>() {
-    override fun deserialize(jp: JsonParser, ctxt: DeserializationContext?): ProjectType {
-        val valueAsString = jp.text.uppercase(Locale.getDefault())
-        return ProjectType.valueOf(valueAsString)
-    }
-}
-
-class CaseInsensitiveEnumSerializer : JsonSerializer<ProjectType>() {
-    override fun serialize(
-        value: ProjectType,
-        gen: JsonGenerator,
-        serializers: SerializerProvider?
-    ) {
-        gen.writeString(value.name.lowercase(Locale.getDefault()))
-    }
-}
-
+/**
+ * The type of project.
+ * This indicates how the project should be resolved.
+ */
 @JsonDeserialize(using = CaseInsensitiveEnumDeserializer::class)
 @JsonSerialize(using = CaseInsensitiveEnumSerializer::class)
 enum class ProjectType {
+    /**
+     * A project hosted on GitHub.
+     * Its source should be in the format `owner/repo`.
+     */
     GITHUB
 }
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    property = "type",
+/**
+ * A project source.
+ * This is used to resolve a project.
+ * Depending on the type, the source will be interpreted differently.
+ */
+data class ProjectSource(
+    val id: Int,
+    val name: String,
+    val source: String,
+    val type: ProjectType,
 )
-@JsonSubTypes(
-    JsonSubTypes.Type(value = RemoteGithubProject::class, name = "remote_github"),
-)
-sealed class PartialProject {
-    abstract val id: Int
-    abstract val name: String
-    abstract val type: ProjectType
+
+
+fun ProjectSource.getOwnerAndRepo(): Pair<String, String> {
+    if (this.type != ProjectType.GITHUB) {
+        throw IllegalArgumentException("Cannot get owner and repo for non-github project")
+    }
+    val regex = Regex("^([a-zA-Z0-9-]+)/([a-zA-Z0-9-]+)$")
+    val match = regex.find(this.source) ?: throw IllegalArgumentException("Invalid source")
+    val (owner, repo) = match.destructured
+    return Pair(owner, repo)
 }
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    property = "type"
+/**
+ * A project request.
+ * This is used to create a project.
+ * Depending on the type, the source will be interpreted differently.
+ */
+data class ProjectRequest(
+    val name: String,
+    val source: String,
+    val type: ProjectType,
 )
-@JsonSubTypes(
-    JsonSubTypes.Type(value = GithubProjectRequest::class, name = "github")
+
+/**
+ * A project update.
+ * This is used to update a project.
+ * Depending on the type, the source will be interpreted differently.
+ */
+data class ProjectUpdate(
+    val name: String?,
+    val source: String?,
+    val type: ProjectType?,
 )
-sealed interface ProjectRequest {
-    val name: String
-    val type: ProjectType
-}
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    property = "type"
-)
-@JsonSubTypes(
-    JsonSubTypes.Type(value = GithubProjectUpdate::class, name = "github")
-)
-sealed interface ProjectUpdate {
-    val type: ProjectType
-}
-
-data class RemoteGithubProject(
-    override val id: Int,
-    override val name: String,
-    val owner: String,
-    val repo: String,
-) : PartialProject() {
-    override val type = ProjectType.GITHUB
-}
-
-data class GithubProjectRequest(
-    override val name: String,
-    val owner: String,
-    val repo: String,
-) : ProjectRequest {
-    override val type = ProjectType.GITHUB
-}
-
-data class GithubProjectUpdate(
-    val owner: String?,
-    val repo: String?,
-) : ProjectUpdate {
-    override val type: ProjectType = ProjectType.GITHUB
-}
-
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
-)
-@JsonSubTypes(
-    JsonSubTypes.Type(value = GithubProject::class, name = "github")
-)
-sealed class Project : PartialProject()
-
-data class GithubProject(
-    override val id: Int,
-    override val name: String,
-    val owner: String,
-    val repo: String,
+/**
+ * A full project.
+ * The source field should be a full URL to the project.
+ */
+data class Project(
+    val id: Int,
+    val name: String,
+    val source: String,
     val description: String?,
-    val stars: Int,
-    val lastCommit: Instant?,
-    val homepage: String?,
+    val updated: Instant?,
+    val website: String?,
     val language: String?,
-    val banner: String?
-) : Project() {
-    override val type = ProjectType.GITHUB
-}
+    val banner: String?,
+    val stars: Int?,
+)

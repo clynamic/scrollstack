@@ -6,11 +6,11 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.Interceptor
+import net.clynamic.common.HttpErrorInterceptor
+import net.clynamic.common.UserAgentInterceptor
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
-import okio.IOException
 import org.jsoup.Jsoup
 import java.time.Instant
 
@@ -24,75 +24,61 @@ class ProjectClient {
         SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
     )
 
-    class HttpErrorInterceptor : Interceptor {
-        override fun intercept(chain: Interceptor.Chain): Response {
-            val request = chain.request()
-            val response = chain.proceed(request)
-
-            if (!response.isSuccessful) {
-                throw IOException("Http Request Failed: $response")
-            }
-
-            return response
-        }
-    }
-
-    class UserAgentInterceptor(private val userAgent: String) : Interceptor {
-        override fun intercept(chain: Interceptor.Chain): Response {
-            val originalRequest = chain.request()
-            val requestWithUserAgent = originalRequest.newBuilder()
-                .header("User-Agent", userAgent)
-                .build()
-            return chain.proceed(requestWithUserAgent)
-        }
-    }
-
-    suspend fun resolve(projects: List<PartialProject>): List<Project> {
+    suspend fun resolve(projects: List<ProjectSource>): List<Project> {
         return projects.map { resolve(it) }
     }
 
-    suspend fun resolve(project: PartialProject): Project {
-        return when (project) {
-            is Project -> project
-            is RemoteGithubProject -> resolveGithubProject(project)
+    suspend fun resolve(project: ProjectSource): Project {
+        return when (project.type) {
+            ProjectType.GITHUB -> resolveGithubProject(project)
         }
     }
 
-    private suspend fun resolveGithubProject(project: RemoteGithubProject): GithubProject {
-        return withContext(Dispatchers.IO) {
-            val uri = "https://api.github.com/repos/${project.owner}/${project.repo}"
+    private suspend fun resolveGithubProject(project: ProjectSource): Project =
+        withContext(Dispatchers.IO) {
+            val (owner, repo) = project.getOwnerAndRepo()
             val request = Request.Builder()
-                .url(uri)
+                .url(
+                    HttpUrl.Builder()
+                        .scheme("https")
+                        .host("api.github.com")
+                        .addPathSegment("repos")
+                        .addPathSegment(owner)
+                        .addPathSegment(repo)
+                        .build()
+                )
                 .build()
             val response = client.newCall(request).execute()
             return@withContext response.use {
                 val body = response.body!!.string()
                 val banner = resolveGithubBanner(project)
-
                 val map = mapper.readValue<Map<String, Any>>(body)
-                val (owner, repo) = map["full_name"].toString().split("/")
-
-                return@use GithubProject(
+                return@use Project(
                     id = project.id,
                     name = map["name"] as String,
-                    owner = owner,
-                    repo = repo,
+                    source = map["html_url"] as String,
                     description = map["description"] as? String?,
-                    stars = map["stargazers_count"] as? Int ?: 0,
+                    updated = map["pushed_at"]?.let { Instant.parse(it as String) },
+                    website = map["homepage"] as? String?,
                     language = map["language"] as? String?,
-                    lastCommit = map["pushed_at"]?.let { Instant.parse(it as String) },
-                    homepage = map["homepage"] as? String?,
                     banner = banner,
+                    stars = map["stargazers_count"] as? Int ?: 0,
                 )
             }
         }
-    }
 
-    private suspend fun resolveGithubBanner(project: RemoteGithubProject): String? {
+    private suspend fun resolveGithubBanner(project: ProjectSource): String? {
         return withContext(Dispatchers.IO) {
-            val url = "https://github.com/${project.owner}/${project.repo}"
+            val (owner, repo) = project.getOwnerAndRepo()
             val request = Request.Builder()
-                .url(url)
+                .url(
+                    HttpUrl.Builder()
+                        .scheme("https")
+                        .host("github.com")
+                        .addPathSegment(owner)
+                        .addPathSegment(repo)
+                        .build()
+                )
                 .build()
 
             val response = client.newCall(request).execute()
