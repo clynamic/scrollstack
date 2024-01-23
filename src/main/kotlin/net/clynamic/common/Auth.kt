@@ -21,7 +21,7 @@ fun Application.configureAuth() {
         bearer {
             authenticate { credential ->
                 val call = this.request.call
-                if (credential.token == adminToken) {
+                if (adminToken == null || credential.token == adminToken) {
                     logger.info("Admin request from ${call.request.origin.remoteHost}")
                     return@authenticate UserIdPrincipal("admin")
                 } else {
