@@ -13,6 +13,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
 import net.clynamic.common.DATABASE_KEY
 import net.clynamic.common.getPageAndSize
+import net.clynamic.common.getSortAndOrder
 
 fun Application.configureUsersRouting() {
     val database = attributes[DATABASE_KEY]
@@ -49,6 +50,8 @@ fun Application.configureUsersRouting() {
                 request {
                     queryParameter<Int?>("page") { description = "The page number" }
                     queryParameter<Int?>("size") { description = "The page size" }
+                    queryParameter<String?>("sort") { description = "The sort field" }
+                    queryParameter<String?>("order") { description = "The sort order" }
                     queryParameter<Int?>("project") {
                         description = "Project ID to filter by association"
                     }
@@ -60,8 +63,9 @@ fun Application.configureUsersRouting() {
                 }
             }) {
             val (page, size) = call.getPageAndSize()
+            val (sort, order) = call.getSortAndOrder()
             val project = call.parameters["project"]?.toIntOrNull()
-            val users = service.page(page, size, project)
+            val users = service.page(page, size, sort, order, project)
             call.respond(HttpStatusCode.OK, users)
         }
         authenticate {

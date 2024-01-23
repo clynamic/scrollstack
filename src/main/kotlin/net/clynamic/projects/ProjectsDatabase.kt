@@ -1,78 +1,31 @@
 package net.clynamic.projects
 
-import kotlinx.coroutines.Dispatchers
-import net.clynamic.common.Service
-import net.clynamic.userprojects.UserProjectsService
+import net.clynamic.common.IntServiceTable
+import net.clynamic.common.IntSqlService
+import net.clynamic.common.setAll
+import net.clynamic.userprojects.UserProjectsService.UserProjects
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 
-class ProjectService(database: Database) : Service<ProjectRequest, ProjectSource, ProjectUpdate> {
-    object ProjectSources : Table() {
-        val id = integer("id").autoIncrement()
+class ProjectService(database: Database) :
+    IntSqlService<ProjectRequest, ProjectSource, ProjectUpdate, ProjectService.ProjectSources>(
+        database
+    ) {
+    object ProjectSources : IntServiceTable() {
         val name = text("name")
         val sourceStr = text("source")
         val type = enumeration("type", ProjectType::class)
-
-        override val primaryKey = PrimaryKey(id)
     }
 
-    init {
-        transaction(database) { SchemaUtils.create(ProjectSources) }
-    }
+    override val table: ProjectSources
+        get() = ProjectSources
 
-    private suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO) { block() }
-
-    override suspend fun create(request: ProjectRequest): Int = dbQuery {
-        ProjectSources.insert {
-            it[name] = request.name
-            it[sourceStr] = request.source
-            it[type] = request.type
-        } get ProjectSources.id
-    }
-
-    override suspend fun read(id: Int): ProjectSource? = dbQuery {
-        ProjectSources.select { ProjectSources.id eq id }.firstOrNull()?.let { row ->
-            ProjectSource(
-                id = row[ProjectSources.id],
-                name = row[ProjectSources.name],
-                source = row[ProjectSources.sourceStr],
-                type = row[ProjectSources.type]
-            )
-        }
-    }
-
-    override suspend fun page(page: Int?, size: Int?): List<ProjectSource> = this.page(page, size)
-
-    suspend fun page(page: Int?, size: Int?, user: Int? = null): List<ProjectSource> = dbQuery {
-        val sized = (size ?: 20).coerceAtMost(40)
-        val paged = (page ?: 1).coerceAtLeast(1)
-
-        val query = if (user != null) {
-            ProjectSources
-                .innerJoin(
-                    UserProjectsService.UserProjects,
-                    { id },
-                    { projectId })
-                .select { UserProjectsService.UserProjects.userId eq user }
-        } else {
-            ProjectSources.selectAll()
-        }
-        query.limit(sized, ((paged - 1) * sized).toLong())
-            .toList()
-
-    }.map { row ->
-        ProjectSource(
+    override fun toModel(row: ResultRow): ProjectSource {
+        return ProjectSource(
             id = row[ProjectSources.id],
             name = row[ProjectSources.name],
             source = row[ProjectSources.sourceStr],
@@ -80,16 +33,36 @@ class ProjectService(database: Database) : Service<ProjectRequest, ProjectSource
         )
     }
 
-    override suspend fun update(id: Int, update: ProjectUpdate): Unit = dbQuery {
-        ProjectSources.update({ ProjectSources.id eq id }) {
-            update.name?.let { name -> it[ProjectSources.name] = name }
-            update.source?.let { source -> it[sourceStr] = source }
-            update.type?.let { type -> it[ProjectSources.type] = type }
+    override fun fromUpdate(statement: UpdateBuilder<*>, update: ProjectUpdate) {
+        statement.setAll {
+            ProjectSources.name set update.name
+            ProjectSources.sourceStr set update.source
+            ProjectSources.type set update.type
         }
     }
 
+    override fun fromRequest(statement: UpdateBuilder<*>, request: ProjectRequest) {
+        statement.setAll {
+            ProjectSources.name set request.name
+            ProjectSources.sourceStr set request.source
+            ProjectSources.type set request.type
+        }
+    }
 
-    override suspend fun delete(id: Int): Unit = dbQuery {
-        ProjectSources.deleteWhere { ProjectSources.id eq id }
+    suspend fun page(
+        page: Int? = null,
+        size: Int? = null,
+        sort: String? = null,
+        order: SortOrder? = null,
+        user: Int? = null
+    ): List<ProjectSource> = dbQuery {
+        query(page, size, sort, order).let { baseQuery ->
+            user?.let {
+                baseQuery.andWhere {
+                    ProjectSources.id inList UserProjects.select { UserProjects.userId eq it }
+                        .map { it[UserProjects.projectId] }
+                }
+            } ?: baseQuery
+        }.mapNotNull(::toModel)
     }
 }

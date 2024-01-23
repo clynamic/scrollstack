@@ -1,120 +1,78 @@
 package net.clynamic.users
 
-import kotlinx.coroutines.Dispatchers
-import net.clynamic.common.Service
-import net.clynamic.userprojects.UserProjectsService
+import net.clynamic.common.IntServiceTable
+import net.clynamic.common.IntSqlService
+import net.clynamic.common.setAll
+import net.clynamic.userprojects.UserProjectsService.UserProjects
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 
-class UserService(database: Database) : Service<UserRequest, User, UserUpdate> {
-    object Users : Table() {
-        val id = integer("id").autoIncrement()
+class UserService(database: Database) :
+    IntSqlService<UserRequest, User, UserUpdate, UserService.Users>(database) {
+    object Users : IntServiceTable() {
         val name = varchar("name", 128)
         val email = varchar("email", 128)
         val pronouns = varchar("pronouns", 32).nullable()
         val bio = text("bio").nullable()
         val discord = varchar("discord", 32).nullable()
         val github = varchar("github", 32).nullable()
-
-        override val primaryKey = PrimaryKey(id)
     }
 
-    init {
-        transaction(database) { SchemaUtils.create(Users) }
+    override val table: Users
+        get() = Users
+
+    override fun toModel(row: ResultRow): User {
+        return User(
+            id = row[Users.id],
+            name = row[Users.name],
+            email = row[Users.email],
+            pronouns = row[Users.pronouns],
+            bio = row[Users.bio],
+            discord = row[Users.discord],
+            github = row[Users.github]
+        )
     }
 
-    private suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO) { block() }
-
-    override suspend fun create(request: UserRequest): Int = dbQuery {
-        Users.insert {
-            it[name] = request.name
-            it[email] = request.email
-            it[pronouns] = request.pronouns
-            it[bio] = request.bio
-            it[discord] = request.discord
-            it[github] = request.github
-        }[Users.id]
+    override fun fromUpdate(statement: UpdateBuilder<*>, update: UserUpdate) {
+        statement.setAll {
+            Users.name set update.name
+            Users.email set update.email
+            Users.pronouns set update.pronouns
+            Users.bio set update.bio
+            Users.discord set update.discord
+            Users.github set update.github
+        }
     }
 
-    override suspend fun read(id: Int): User? {
-        return dbQuery {
-            Users.select { Users.id eq id }
-                .map {
-                    User(
-                        id = it[Users.id],
-                        name = it[Users.name],
-                        email = it[Users.email],
-                        pronouns = it[Users.pronouns],
-                        bio = it[Users.bio],
-                        discord = it[Users.discord],
-                        github = it[Users.github],
-                    )
+    override fun fromRequest(statement: UpdateBuilder<*>, request: UserRequest) {
+        statement.setAll {
+            Users.name set request.name
+            Users.email set request.email
+            Users.pronouns set request.pronouns
+            Users.bio set request.bio
+            Users.discord set request.discord
+            Users.github set request.github
+        }
+    }
+
+    suspend fun page(
+        page: Int? = null,
+        size: Int? = null,
+        sort: String? = null,
+        order: SortOrder? = null,
+        project: Int? = null
+    ): List<User> = dbQuery {
+        query(page, size, sort, order).let { baseQuery ->
+            project?.let {
+                baseQuery.andWhere {
+                    Users.id inList UserProjects.select { UserProjects.projectId eq project }
+                        .map { it[UserProjects.userId] }
                 }
-                .singleOrNull()
-        }
-    }
-
-    override suspend fun page(page: Int?, size: Int?): List<User> {
-        return this.page(page, size)
-    }
-
-    suspend fun page(page: Int?, size: Int?, project: Int? = null): List<User> {
-        val sized = (size ?: 20).coerceAtMost(40)
-        val paged = (page ?: 1).coerceAtLeast(1)
-        return dbQuery {
-            val query = if (project != null) {
-                Users
-                    .innerJoin(
-                        UserProjectsService.UserProjects,
-                        { id },
-                        { projectId })
-                    .select { UserProjectsService.UserProjects.projectId eq project }
-            } else {
-                Users.selectAll()
-            }
-            query
-                .limit(sized, ((paged - 1) * sized).toLong())
-                .map {
-                    User(
-                        id = it[Users.id],
-                        name = it[Users.name],
-                        email = it[Users.email],
-                        pronouns = it[Users.pronouns],
-                        bio = it[Users.bio],
-                        discord = it[Users.discord],
-                        github = it[Users.github],
-                    )
-                }
-        }
-    }
-
-    override suspend fun update(id: Int, update: UserUpdate) {
-        dbQuery {
-            Users.update({ Users.id eq id }) {
-                if (update.name != null)
-                    it[name] = update.name
-                if (update.email != null)
-                    it[email] = update.email
-                it[pronouns] = update.pronouns
-                it[bio] = update.bio
-                it[discord] = update.discord
-                it[github] = update.github
-            }
-        }
-    }
-
-    override suspend fun delete(id: Int) {
-        dbQuery { Users.deleteWhere { Users.id.eq(id) } }
+            } ?: baseQuery
+        }.mapNotNull(::toModel)
     }
 }

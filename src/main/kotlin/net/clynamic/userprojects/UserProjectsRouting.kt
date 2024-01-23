@@ -40,7 +40,7 @@ fun Application.configureUserProjectsRouting() {
                 return@get
             }
 
-            val has = service.has(userId, projectId)
+            val has = service.read(UserProjectRelation(userId, projectId)) != null
             if (has) {
                 call.respond(HttpStatusCode.OK)
             } else {
@@ -65,7 +65,7 @@ fun Application.configureUserProjectsRouting() {
             }) {
                 val relation = call.receive<UserProjectRelation>()
                 val (userId, projectId) = relation
-                service.associate(userId, projectId)
+                service.create(UserProjectRelation(userId, projectId))
                 call.response.headers.append(
                     "Location",
                     "/user-projects/${userId}/${projectId}"
@@ -89,7 +89,7 @@ fun Application.configureUserProjectsRouting() {
                     return@delete
                 }
 
-                service.dissociate(userId, projectId)
+                service.delete(UserProjectRelation(userId, projectId))
                 call.respond(HttpStatusCode.NoContent)
             }
         }
