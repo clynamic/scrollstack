@@ -61,13 +61,13 @@ fun Application.configureProjectsRouting() {
                 return@get
             }
 
-            val partialProject = service.read(id)
-            if (partialProject == null) {
+            val projectSource = service.read(id)
+            if (projectSource == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
             }
 
-            val project = client.resolve(partialProject)
+            val project = client.resolve(projectSource)
             call.respond(HttpStatusCode.OK, project)
         }
         get("/projects", {
@@ -86,8 +86,8 @@ fun Application.configureProjectsRouting() {
         }) {
             val (page, size) = call.getPageAndSize()
             val user = call.parameters["user"]?.toIntOrNull()
-            val partialProjects = service.page(page, size, user)
-            val projects = client.resolve(partialProjects)
+            val projectSources = service.page(page, size, user)
+            val projects = client.resolve(projectSources)
             call.respond(HttpStatusCode.OK, projects)
         }
         put("/projects/{id}", {

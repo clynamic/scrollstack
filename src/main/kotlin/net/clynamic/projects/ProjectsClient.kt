@@ -20,18 +20,16 @@ class ProjectClient {
         // TODO: make this info clynamic ;)
         .addInterceptor(UserAgentInterceptor("scrollstack/1.0.0 (clynamic)"))
         .build()
+
     private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule()).disable(
         SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
     )
 
-    suspend fun resolve(projects: List<ProjectSource>): List<Project> {
-        return projects.map { resolve(it) }
-    }
+    suspend fun resolve(projects: List<ProjectSource>): List<Project> =
+        projects.map { resolve(it) }
 
-    suspend fun resolve(project: ProjectSource): Project {
-        return when (project.type) {
-            ProjectType.GITHUB -> resolveGithubProject(project)
-        }
+    suspend fun resolve(project: ProjectSource): Project = when (project.type) {
+        ProjectType.GITHUB -> resolveGithubProject(project)
     }
 
     private suspend fun resolveGithubProject(project: ProjectSource): Project =
