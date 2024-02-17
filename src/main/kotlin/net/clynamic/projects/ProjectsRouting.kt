@@ -43,11 +43,6 @@ fun Application.configureProjectsRouting() {
             }
 
             val projectSource = service.read(id)
-            if (projectSource == null) {
-                call.respond(HttpStatusCode.NotFound)
-                return@get
-            }
-
             val project = client.resolve(projectSource)
             call.respond(HttpStatusCode.OK, project)
         }

@@ -7,6 +7,7 @@ import net.clynamic.common.configureAuth
 import net.clynamic.common.configureCors
 import net.clynamic.common.configureDatabases
 import net.clynamic.common.configureEnvironment
+import net.clynamic.common.configureErrors
 import net.clynamic.common.configureHttpDocs
 import net.clynamic.common.configureSerialization
 import net.clynamic.common.dotenv
@@ -26,6 +27,7 @@ fun Application.module() {
     configureHttpDocs()
     configureAuth()
     configureCors()
+    configureErrors()
     configureDatabases()
     configureUsersRouting()
     configureProjectsRouting()

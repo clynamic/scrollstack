@@ -37,11 +37,7 @@ fun Application.configureUsersRouting() {
         }) {
             val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
             val user = service.read(id)
-            if (user != null) {
-                call.respond(HttpStatusCode.OK, user)
-            } else {
-                call.respond(HttpStatusCode.NotFound, "User not found")
-            }
+            call.respond(HttpStatusCode.OK, user)
         }
         get("/users",
             {
