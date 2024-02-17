@@ -8,12 +8,18 @@ import org.slf4j.LoggerFactory
 fun Application.configureCors() {
     val logger = LoggerFactory.getLogger("Cors")
 
-    val hostUrl = attributes[ENVIRONMENT_KEY].get("HOST_URL", null)
+    val hostUrls = attributes[ENVIRONMENT_KEY].get("HOST_URLS", null)
 
     install(CORS) {
-        hostUrl?.let {
-            logger.info("Allowing requests from $hostUrl")
-            allowHost(hostUrl, listOf("http", "https"))
+        hostUrls?.split(",")?.map { it.trim() }?.forEach { hostUrl ->
+            if (hostUrl.isNotEmpty()) {
+                logger.info("Allowing requests from $hostUrl")
+                allowHost(hostUrl, listOf("http", "https"))
+            }
+        }
+
+        allowOrigins {
+            it.matches(Regex("^(https?://)?(localhost|127\\.\\d+\\.\\d+\\.\\d+)(:\\d+)?(/.*)?$"))
         }
         allowSameOrigin = true
     }
