@@ -9,7 +9,8 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.statements.UpdateBuilder
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 
 class UserService(database: Database) :
     IntSqlService<UserRequest, User, UserUpdate, UserService.Users>(database) {
@@ -37,7 +38,7 @@ class UserService(database: Database) :
         )
     }
 
-    override fun fromUpdate(statement: UpdateBuilder<*>, update: UserUpdate) {
+    override fun fromUpdate(statement: UpdateStatement, update: UserUpdate) {
         statement.setAll {
             Users.name set update.name
             Users.email set update.email
@@ -48,7 +49,7 @@ class UserService(database: Database) :
         }
     }
 
-    override fun fromRequest(statement: UpdateBuilder<*>, request: UserRequest) {
+    override fun fromRequest(statement: InsertStatement<*>, request: UserRequest) {
         statement.setAll {
             Users.name set request.name
             Users.email set request.email

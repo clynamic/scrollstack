@@ -11,7 +11,8 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.statements.UpdateBuilder
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 
 class UserProjectsService(database: Database) :
     SqlService<UserProjectRelation, UserProjectRelation, Nothing, UserProjectRelation, UserProjectsService.UserProjects>(
@@ -45,10 +46,10 @@ class UserProjectsService(database: Database) :
         projectId = row[UserProjects.projectId]
     )
 
-    override fun fromUpdate(statement: UpdateBuilder<*>, update: Nothing): Unit =
+    override fun fromUpdate(statement: UpdateStatement, update: Nothing): Unit =
         throw NotImplementedError("UserProjectsService does not support updates.")
 
-    override fun fromRequest(statement: UpdateBuilder<*>, request: UserProjectRelation) =
+    override fun fromRequest(statement: InsertStatement<*>, request: UserProjectRelation) =
         statement.setAll {
             UserProjects.userId set request.userId
             UserProjects.projectId set request.projectId

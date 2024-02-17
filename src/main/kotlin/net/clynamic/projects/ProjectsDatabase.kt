@@ -9,7 +9,8 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.statements.UpdateBuilder
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 
 class ProjectService(database: Database) :
     IntSqlService<ProjectRequest, ProjectSource, ProjectUpdate, ProjectService.ProjectSources>(
@@ -33,7 +34,7 @@ class ProjectService(database: Database) :
         )
     }
 
-    override fun fromUpdate(statement: UpdateBuilder<*>, update: ProjectUpdate) {
+    override fun fromUpdate(statement: UpdateStatement, update: ProjectUpdate) {
         statement.setAll {
             ProjectSources.name set update.name
             ProjectSources.sourceStr set update.source
@@ -41,7 +42,7 @@ class ProjectService(database: Database) :
         }
     }
 
-    override fun fromRequest(statement: UpdateBuilder<*>, request: ProjectRequest) {
+    override fun fromRequest(statement: InsertStatement<*>, request: ProjectRequest) {
         statement.setAll {
             ProjectSources.name set request.name
             ProjectSources.sourceStr set request.source
