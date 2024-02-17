@@ -3,8 +3,8 @@ package net.clynamic.userprojects
 import net.clynamic.common.ServiceTable
 import net.clynamic.common.SqlService
 import net.clynamic.common.setAll
-import net.clynamic.projects.ProjectService
-import net.clynamic.users.UserService
+import net.clynamic.projects.ProjectsService
+import net.clynamic.users.UsersService
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -20,10 +20,10 @@ class UserProjectsService(database: Database) :
     ) {
     object UserProjects : ServiceTable<UserProjectRelation>() {
         val userId =
-            integer("user_id").references(UserService.Users.id, onDelete = ReferenceOption.CASCADE)
+            integer("user_id").references(UsersService.Users.id, onDelete = ReferenceOption.CASCADE)
         val projectId =
             integer("project_id").references(
-                ProjectService.ProjectSources.id,
+                ProjectsService.ProjectSources.id,
                 onDelete = ReferenceOption.CASCADE
             )
 

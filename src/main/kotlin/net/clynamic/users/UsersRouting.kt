@@ -17,7 +17,7 @@ import net.clynamic.common.getSortAndOrder
 
 fun Application.configureUsersRouting() {
     val database = attributes[DATABASE_KEY]
-    val service = UserService(database)
+    val service = UsersService(database)
 
     routing {
         get("/users/{id}", {

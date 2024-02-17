@@ -12,8 +12,8 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateStatement
 
-class ProjectService(database: Database) :
-    IntSqlService<ProjectRequest, ProjectSource, ProjectUpdate, ProjectService.ProjectSources>(
+class ProjectsService(database: Database) :
+    IntSqlService<ProjectRequest, ProjectSource, ProjectUpdate, ProjectsService.ProjectSources>(
         database
     ) {
     object ProjectSources : IntServiceTable() {

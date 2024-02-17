@@ -12,8 +12,8 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateStatement
 
-class UserService(database: Database) :
-    IntSqlService<UserRequest, User, UserUpdate, UserService.Users>(database) {
+class UsersService(database: Database) :
+    IntSqlService<UserRequest, User, UserUpdate, UsersService.Users>(database) {
     object Users : IntServiceTable() {
         val name = varchar("name", 128)
         val email = varchar("email", 128)
