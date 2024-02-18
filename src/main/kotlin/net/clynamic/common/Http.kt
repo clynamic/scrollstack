@@ -1,6 +1,10 @@
 package net.clynamic.common
 
+import io.ktor.http.HttpHeaders
 import io.ktor.http.RequestConnectionPoint
+import io.ktor.server.plugins.origin
+import io.ktor.server.request.ApplicationRequest
+import io.ktor.server.request.header
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -34,14 +38,18 @@ class UserAgentInterceptor(private val userAgent: String) : Interceptor {
  *
  * This will fail if the server is behind a sub-path.
  */
-val RequestConnectionPoint.serverUrl: String
-    get() = HttpUrl.Builder()
-        .scheme(
-            when (serverPort) {
-                443 -> "https"
-                else -> "http"
+val ApplicationRequest.serverUrl: String
+    get() {
+        val scheme = header(HttpHeaders.XForwardedProto) ?: origin.scheme
+        val host = header(HttpHeaders.XForwardedHost) ?: origin.serverHost
+        val port = header(HttpHeaders.XForwardedPort)?.toIntOrNull() ?: origin.serverPort
+
+        return HttpUrl.Builder()
+            .scheme(scheme)
+            .host(host)
+            .apply {
+                if (port != 80 && port != 443) port(port)
             }
-        )
-        .host(serverHost)
-        .build()
-        .toString()
+            .build()
+            .toString()
+    }

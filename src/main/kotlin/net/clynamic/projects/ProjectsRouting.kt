@@ -8,7 +8,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
-import io.ktor.server.plugins.origin
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
@@ -55,7 +54,7 @@ fun Application.configureProjectsRouting() {
             val projectSource = service.read(id)
             val project: Project
             try {
-                project = client.resolve(projectSource, call.request.origin.serverUrl)
+                project = client.resolve(projectSource, call.request.serverUrl)
             } catch (e: IOException) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
@@ -83,7 +82,7 @@ fun Application.configureProjectsRouting() {
             val (sort, order) = call.getSortAndOrder()
             val user = call.parameters["user"]?.toIntOrNull()
             val projectSources = service.page(page, size, sort, order, user)
-            val projects = client.resolve(projectSources, call.request.origin.serverUrl)
+            val projects = client.resolve(projectSources, call.request.serverUrl)
             call.respond(HttpStatusCode.OK, projects)
         }
         authenticate {
