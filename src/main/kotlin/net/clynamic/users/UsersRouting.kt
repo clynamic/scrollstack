@@ -23,11 +23,16 @@ fun Application.configureUsersRouting() {
         get("/users/{id}", {
             tags = listOf("users")
             description = "Get a user by ID"
+            operationId = "user"
             request {
-                pathParameter<Int>("id") { description = "The user ID" }
+                pathParameter<Int>("id") {
+                    description = "The user ID"
+                    required = true
+                }
             }
             response {
                 HttpStatusCode.OK to {
+                    description = "The user"
                     body<User> {}
                 }
                 HttpStatusCode.NotFound to {
@@ -43,6 +48,7 @@ fun Application.configureUsersRouting() {
             {
                 tags = listOf("users")
                 description = "Get a page of users"
+                operationId = "users"
                 request {
                     queryParameter<Int?>("page") { description = "The page number" }
                     queryParameter<Int?>("size") { description = "The page size" }
@@ -54,6 +60,7 @@ fun Application.configureUsersRouting() {
                 }
                 response {
                     HttpStatusCode.OK to {
+                        description = "The page of users"
                         body<List<User>> {}
                     }
                 }
@@ -69,9 +76,11 @@ fun Application.configureUsersRouting() {
                 tags = listOf("users")
                 description = "Create a user"
                 securitySchemeName = "bearer"
+                operationId = "createUser"
                 request {
                     body<UserRequest> {
                         description = "New user properties"
+                        required = true
                     }
                 }
                 response {
@@ -91,10 +100,15 @@ fun Application.configureUsersRouting() {
                 tags = listOf("users")
                 description = "Update a user"
                 securitySchemeName = "bearer"
+                operationId = "updateUser"
                 request {
-                    pathParameter<Int>("id") { description = "The user ID" }
+                    pathParameter<Int>("id") {
+                        description = "The user ID"
+                        required = true
+                    }
                     body<UserUpdate> {
                         description = "Changed user properties"
+                        required = true
                     }
                 }
                 response {
@@ -113,8 +127,12 @@ fun Application.configureUsersRouting() {
                 tags = listOf("users")
                 description = "Delete a user"
                 securitySchemeName = "bearer"
+                operationId = "deleteUser"
                 request {
-                    pathParameter<Int>("id") { description = "The user ID" }
+                    pathParameter<Int>("id") {
+                        description = "The user ID"
+                        required = true
+                    }
                 }
                 response {
                     HttpStatusCode.OK to {

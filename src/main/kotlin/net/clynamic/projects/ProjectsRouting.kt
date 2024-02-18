@@ -29,11 +29,16 @@ fun Application.configureProjectsRouting() {
         get("/projects/{id}", {
             tags = listOf("projects")
             description = "Get a project by ID"
+            operationId = "project"
             request {
-                pathParameter<Int>("id") { description = "The project ID" }
+                pathParameter<Int>("id") {
+                    description = "The project ID"
+                    required = true
+                }
             }
             response {
                 HttpStatusCode.OK to {
+                    description = "The project"
                     body<Project> {}
                 }
                 HttpStatusCode.NotFound to {
@@ -60,6 +65,7 @@ fun Application.configureProjectsRouting() {
         get("/projects", {
             tags = listOf("projects")
             description = "Get a page of projects"
+            operationId = "projects"
             request {
                 queryParameter<Int?>("page") { description = "The page number" }
                 queryParameter<Int?>("size") { description = "The page size" }
@@ -85,9 +91,11 @@ fun Application.configureProjectsRouting() {
                 tags = listOf("projects")
                 description = "Create a project"
                 securitySchemeName = "bearer"
+                operationId = "createProject"
                 request {
                     body<ProjectRequest> {
                         description = "New project properties"
+                        required = true
                     }
                 }
                 response {
@@ -107,10 +115,15 @@ fun Application.configureProjectsRouting() {
                 tags = listOf("projects")
                 description = "Update a project by ID"
                 securitySchemeName = "bearer"
+                operationId = "updateProject"
                 request {
-                    pathParameter<Int>("id") { description = "The project ID" }
+                    pathParameter<Int>("id") {
+                        description = "The project ID"
+                        required = true
+                    }
                     body<ProjectUpdate> {
                         description = "New project properties"
+                        required = true
                     }
                 }
                 response {
@@ -133,8 +146,12 @@ fun Application.configureProjectsRouting() {
                 tags = listOf("projects")
                 description = "Delete a project by ID"
                 securitySchemeName = "bearer"
+                operationId = "deleteProject"
                 request {
-                    pathParameter<Int>("id") { description = "The project ID" }
+                    pathParameter<Int>("id") {
+                        description = "The project ID"
+                        required = true
+                    }
                 }
                 response {
                     HttpStatusCode.NoContent to {

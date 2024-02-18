@@ -20,8 +20,12 @@ fun Application.configureContentsRouting() {
         get("/cdn/{id}", {
             tags = listOf("contents")
             description = "Get a byte stream of a content by ID"
+            operationId = "content"
             request {
-                pathParameter<Int>("id") { description = "The content ID" }
+                pathParameter<Int>("id") {
+                    description = "The content ID"
+                    required = true
+                }
             }
             response {
                 HttpStatusCode.OK to {

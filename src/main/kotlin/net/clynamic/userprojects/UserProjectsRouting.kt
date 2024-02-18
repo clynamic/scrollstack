@@ -20,9 +20,16 @@ fun Application.configureUserProjectsRouting() {
         get("/user-projects/{userId}/{projectId}", {
             tags = listOf("user-projects")
             description = "Check if a user is associated with a project"
+            operationId = "userProject"
             request {
-                pathParameter<Int>("userId") { description = "The user ID" }
-                pathParameter<Int>("projectId") { description = "The project ID" }
+                pathParameter<Int>("userId") {
+                    description = "The user ID"
+                    required = true
+                }
+                pathParameter<Int>("projectId") {
+                    description = "The project ID"
+                    required = true
+                }
             }
             response {
                 HttpStatusCode.OK to {
@@ -52,9 +59,11 @@ fun Application.configureUserProjectsRouting() {
                 tags = listOf("user-projects")
                 description = "Associate a user with a project"
                 securitySchemeName = "bearer"
+                operationId = "associateUserProject"
                 request {
                     body<UserProjectRelation> {
                         description = "User and project IDs"
+                        required = true
                     }
                 }
                 response {
@@ -76,6 +85,7 @@ fun Application.configureUserProjectsRouting() {
                 tags = listOf("user-projects")
                 description = "Dissociate a user from a project"
                 securitySchemeName = "bearer"
+                operationId = "dissociateUserProject"
                 response {
                     HttpStatusCode.NoContent to {
                         description = "User and project dissociated"
