@@ -12,9 +12,9 @@ fun Application.configureHttpDocs() {
             forwardRoot = true
         }
         info {
-            title = "Scrollstack API"
-            version = "1.0.0"
-            description = "API for Scrollstack, the clynamic portfolio site."
+            title = AppMeta.name
+            version = AppMeta.version
+            description = AppMeta.description
         }
         securityScheme("bearer") {
             type = AuthType.HTTP

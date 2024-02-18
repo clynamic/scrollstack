@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.clynamic.common.AppMeta
 import net.clynamic.common.HttpErrorInterceptor
 import net.clynamic.common.UserAgentInterceptor
 import okhttp3.HttpUrl
@@ -17,8 +18,7 @@ import java.time.Instant
 class ProjectsClient {
     private val client = OkHttpClient.Builder()
         .addInterceptor(HttpErrorInterceptor())
-        // TODO: make this info clynamic ;)
-        .addInterceptor(UserAgentInterceptor("scrollstack/1.0.0 (clynamic)"))
+        .addInterceptor(UserAgentInterceptor("${AppMeta.name}/${AppMeta.version} (${AppMeta.developer})"))
         .build()
 
     private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule()).disable(
