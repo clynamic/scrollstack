@@ -21,6 +21,8 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import java.time.Instant
+import kotlin.math.max
+import kotlin.math.min
 
 interface Service<Request, Model, Update, Id> {
     suspend fun create(request: Request): Id
@@ -86,8 +88,8 @@ abstract class SqlService<Request, Model, Update, Id, TableType : ServiceTable<I
         sort: String?,
         order: SortOrder?,
     ): Query = dbQuery {
-        val pageSize = size ?: Service.defaultSize
-        val pageNumber = page ?: Service.defaultPage
+        val pageSize = max(0, min(size ?: Service.defaultSize, 100))
+        val pageNumber = max(0, (page ?: Service.defaultPage) - 1)
 
         val query = table.selectAll()
 

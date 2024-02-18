@@ -19,7 +19,7 @@ fun Application.configureCors() {
         }
 
         allowOrigins {
-            it.matches(Regex("^(https?://)?(localhost|127\\.\\d+\\.\\d+\\.\\d+)(:\\d+)?(/.*)?$"))
+            it.matches(Regex("^(https?://)?(localhost|0\\.0\\.0\\.0|(127\\.\\d+\\.\\d+\\.\\d+))(:\\d+)?(/.*)?$"))
         }
         allowSameOrigin = true
     }
