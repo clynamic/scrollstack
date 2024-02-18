@@ -14,7 +14,7 @@ import okhttp3.Request
 import org.jsoup.Jsoup
 import java.time.Instant
 
-class ProjectClient {
+class ProjectsClient {
     private val client = OkHttpClient.Builder()
         .addInterceptor(HttpErrorInterceptor())
         // TODO: make this info clynamic ;)

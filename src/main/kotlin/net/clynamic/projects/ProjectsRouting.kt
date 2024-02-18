@@ -18,7 +18,7 @@ import net.clynamic.common.getSortAndOrder
 fun Application.configureProjectsRouting() {
     val database = attributes[DATABASE_KEY]
     val service = ProjectsService(database)
-    val client = ProjectClient()
+    val client = ProjectsClient()
 
     routing {
         get("/projects/{id}", {
