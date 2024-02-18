@@ -40,7 +40,7 @@ fun Application.configureUserProjectsRouting() {
                 return@get
             }
 
-            val has = service.read(UserProjectRelation(userId, projectId)) != null
+            val has = service.readOrNull(UserProjectRelation(userId, projectId)) != null
             if (has) {
                 call.respond(HttpStatusCode.OK)
             } else {
