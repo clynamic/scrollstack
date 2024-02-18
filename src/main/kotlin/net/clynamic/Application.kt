@@ -11,6 +11,7 @@ import net.clynamic.common.configureErrors
 import net.clynamic.common.configureHttpDocs
 import net.clynamic.common.configureSerialization
 import net.clynamic.common.dotenv
+import net.clynamic.contents.configureContentsRouting
 import net.clynamic.projects.configureProjectsRouting
 import net.clynamic.userprojects.configureUserProjectsRouting
 import net.clynamic.users.configureUsersRouting
@@ -29,6 +30,7 @@ fun Application.module() {
     configureCors()
     configureErrors()
     configureDatabases()
+    configureContentsRouting()
     configureUsersRouting()
     configureProjectsRouting()
     configureUserProjectsRouting()

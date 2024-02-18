@@ -13,6 +13,10 @@ fun Application.configureErrors() {
         exception<NoSuchRecordException> { call, cause ->
             call.respond(HttpStatusCode.NotFound, cause.message ?: "Not found")
         }
+        // CDN errors when a record has expired
+        exception<RecordExpiredException> { call, cause ->
+            call.respond(HttpStatusCode.Gone, cause.message ?: "Resource has expired")
+        }
         exception<MissingRequiredParameterException> { call, cause ->
             call.respond(HttpStatusCode.BadRequest, cause.message ?: "Missing required parameter")
         }
@@ -24,3 +28,6 @@ val Parameters.id: Int
 
 class MissingRequiredParameterException(key: String) :
     IllegalArgumentException("Missing required parameter: $key")
+
+class RecordExpiredException(id: Any?, type: String? = null) :
+    NoSuchElementException("${type ?: "Record"} $id has expired")

@@ -2,6 +2,7 @@ package net.clynamic.common
 
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.Query
@@ -19,6 +20,7 @@ import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import java.time.Instant
 
 interface Service<Request, Model, Update, Id> {
     suspend fun create(request: Request): Id
@@ -140,9 +142,28 @@ abstract class SqlService<Request, Model, Update, Id, TableType : ServiceTable<I
     }
 }
 
+
 abstract class IntSqlService<Request, Model, Update, TableType : IntServiceTable>(
     database: Database,
 ) : SqlService<Request, Model, Update, Int, TableType>(database)
+
+
+class InstantAsISO : ColumnType() {
+    override fun sqlType(): String = "VARCHAR"
+
+    override fun valueFromDB(value: Any): Instant {
+        return Instant.parse(value as String)
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        if (value is Instant) {
+            return value.toString()
+        }
+        return super.notNullValueToDB(value)
+    }
+}
+
+fun Table.instant(name: String): Column<Instant> = registerColumn(name, InstantAsISO())
 
 
 class UpdateStatementSets(private val statement: UpdateStatement) {

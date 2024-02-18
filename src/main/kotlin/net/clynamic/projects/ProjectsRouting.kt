@@ -8,17 +8,22 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.plugins.origin
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
 import net.clynamic.common.DATABASE_KEY
 import net.clynamic.common.getPageAndSize
 import net.clynamic.common.getSortAndOrder
+import net.clynamic.common.serverUrl
+import net.clynamic.contents.ContentsService
+import java.io.IOException
 
 fun Application.configureProjectsRouting() {
     val database = attributes[DATABASE_KEY]
     val service = ProjectsService(database)
-    val client = ProjectsClient()
+    val contentsService = ContentsService(database)
+    val client = ProjectsClient(contentsService)
 
     routing {
         get("/projects/{id}", {
@@ -43,7 +48,13 @@ fun Application.configureProjectsRouting() {
             }
 
             val projectSource = service.read(id)
-            val project = client.resolve(projectSource)
+            val project: Project
+            try {
+                project = client.resolve(projectSource, call.request.origin.serverUrl)
+            } catch (e: IOException) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
             call.respond(HttpStatusCode.OK, project)
         }
         get("/projects", {
@@ -66,7 +77,7 @@ fun Application.configureProjectsRouting() {
             val (sort, order) = call.getSortAndOrder()
             val user = call.parameters["user"]?.toIntOrNull()
             val projectSources = service.page(page, size, sort, order, user)
-            val projects = client.resolve(projectSources)
+            val projects = client.resolve(projectSources, call.request.origin.serverUrl)
             call.respond(HttpStatusCode.OK, projects)
         }
         authenticate {
