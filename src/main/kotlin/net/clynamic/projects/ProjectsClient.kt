@@ -18,7 +18,7 @@ import java.time.Instant
 class ProjectsClient {
     private val client = OkHttpClient.Builder()
         .addInterceptor(HttpErrorInterceptor())
-        .addInterceptor(UserAgentInterceptor("${AppMeta.name}/${AppMeta.version} (${AppMeta.developer})"))
+        .addInterceptor(UserAgentInterceptor(AppMeta.userAgent))
         .build()
 
     private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule()).disable(

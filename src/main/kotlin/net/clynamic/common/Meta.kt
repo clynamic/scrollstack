@@ -6,5 +6,8 @@ class AppMeta {
         const val developer = "clynamic"
         const val description = "API server for clynamic profile pages"
         const val version = "1.0.0"
+
+        val userAgent: String
+            get() = "$name/$version ($developer)"
     }
 }
