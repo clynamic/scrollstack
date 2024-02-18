@@ -34,6 +34,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.+")
     implementation("com.h2database:h2:$h2_version")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("io.swagger.core.v3:swagger-annotations:2.2.20")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
     implementation("io.github.smiley4:ktor-swagger-ui:2.4.0")
     implementation("io.ktor:ktor-serialization-jackson:$ktor_version")
